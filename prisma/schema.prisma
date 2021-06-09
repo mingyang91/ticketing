@@ -33,9 +33,13 @@ model Ticket {
   id         String     @id
   flight     Flight     @relation(fields: [flightId], references: [id])
   flightId   String
-  traveler   Traveler   @relation(fields: [travelerId], references: [id])
-  travelerId String
+  traveler   Traveler?  @relation(fields: [travelerId], references: [id])
+  travelerId String?
   price      Int
+  orderState OrderState @default(FREE)
+
+  @@index([orderState], name: "orderState")
+  @@index([flightId], name: "flightId")
 }
 
 model Flight {
@@ -47,3 +51,9 @@ model Flight {
   basePrice Int
 }
 
+enum OrderState {
+  FREE
+  LOCKED_WAIT_CONFIRM
+  PAYING
+  PAYED
+}

@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import * as express from 'express';
 import { Context } from 'aws-lambda';
 
-async function bootstrap() {
+const bootstrap = (async () => {
   const expressApp = express();
   const app = await NestFactory.create(
     AppModule,
@@ -14,12 +14,15 @@ async function bootstrap() {
   );
   app.use(eventContext());
   await app.init();
-  return createServer(expressApp, undefined, []);
-}
 
-const serverM = bootstrap();
+  process.on('SIGINT', () => {
+    app.close();
+  });
+
+  return createServer(expressApp, undefined, []);
+})();
 
 export async function handler(event: any, context: Context) {
-  const server = await serverM;
+  const server = await bootstrap;
   return proxy(server, event, context, 'PROMISE').promise;
 }

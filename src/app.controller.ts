@@ -37,6 +37,20 @@ type PayedTicket = {
 
 type TicketType = FreeTicket | LockedTicket | PayingTicket | PayedTicket;
 
+type CreateTicketSuccess = {
+  ticketId: string;
+};
+
+type CreateTicketError = {
+  message: string;
+};
+
+type CreateTicketReply = CreateTicketSuccess | CreateTicketError;
+
+type CreateOrderRawQueryResult = {
+  id: string;
+};
+
 @Controller()
 class AppController {
   constructor(
@@ -64,8 +78,8 @@ class AppController {
   async createTicketOrder(
     @Query('uid') uid: string,
     @Query('flight') flight: string,
-  ): Promise<string | undefined> {
-    const [head]: { id: string }[] = await this.prisma.$queryRaw`
+  ): Promise<CreateTicketReply> {
+    const list: CreateOrderRawQueryResult[] = await this.prisma.$queryRaw`
       UPDATE "Ticket"
       SET "orderState" = ${OrderState.LOCKED_WAIT_CONFIRM},
           "travelerId" = ${uid}
@@ -79,10 +93,14 @@ class AppController {
       RETURNING id
     `;
 
-    if (head) {
-      return head.id;
+    if (list[0]) {
+      return {
+        ticketId: list[0].id,
+      };
     } else {
-      return;
+      return {
+        message: 'The flight is sold out!',
+      };
     }
   }
 }

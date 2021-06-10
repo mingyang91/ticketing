@@ -1,16 +1,16 @@
-service:
- name: ticketing
+useDotenv: true
+service: ticketing
 package:
   individually: true
 plugins:
- - serverless-webpack
- - serverless-plugin-optimize
+ - serverless-plugin-typescript
  - serverless-offline
 
 provider:
  name: aws
  runtime: nodejs14.x
  region: ap-east-1
+ lambdaHashingVersion: 20201221
 
 functions:
  main: # The name of the lambda function
@@ -19,9 +19,3 @@ functions:
      - http:
          method: any
          path: /{any+}
-
-custom:
-  webpack:
-    webpackConfig: 'webpack.config.js'
-    packager: 'npm'
-    includeModules: true

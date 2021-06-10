@@ -1,0 +1,20 @@
+service:
+ name: ticketing
+
+plugins:
+ - serverless-plugin-typescript
+ - serverless-plugin-optimize
+ - serverless-offline
+
+provider:
+ name: aws
+ runtime: nodejs14.x
+ region: ap-east-1
+
+functions:
+ main: # The name of the lambda function
+   handler: dist/lambda.handler
+   events:
+     - http:
+         method: any
+         path: /{any+}

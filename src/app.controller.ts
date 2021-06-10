@@ -1,8 +1,10 @@
 import { Airport } from '.prisma/client';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { OrderState } from '@prisma/client';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
+import { Response } from 'express';
+import { SSL_OP_TLS_ROLLBACK_BUG } from 'constants';
 
 type FreeTicket = {
   id: string;
@@ -76,31 +78,65 @@ class AppController {
 
   @Get('/api/create-ticket-order')
   async createTicketOrder(
+    @Res({ passthrough: true }) res: Response,
     @Query('uid') uid: string,
     @Query('flight') flight: string,
   ): Promise<CreateTicketReply> {
-    const list: CreateOrderRawQueryResult[] = await this.prisma.$queryRaw`
-      UPDATE "Ticket"
-      SET "orderState" = ${OrderState.LOCKED_WAIT_CONFIRM},
-          "travelerId" = ${uid}
-      WHERE id in (
-        SELECT id 
-        FROM "Ticket"
-        WHERE "orderState" = ${OrderState.FREE}
-          AND "flightId" = ${flight}
-        LIMIT 1
-      )
-      RETURNING id
-    `;
+    try {
+      // lock ticket
+      const list: CreateOrderRawQueryResult[] = await this.prisma.$queryRaw`
+        UPDATE "Ticket"
+        SET "orderState" = ${OrderState.LOCKED_WAIT_CONFIRM},
+            "travelerId" = ${uid}
+        WHERE id in (
+          SELECT id 
+          FROM "Ticket"
+          WHERE "orderState" = ${OrderState.FREE}
+            AND "flightId" = ${flight}
+          LIMIT 1
+        )
+        RETURNING id
+      `;
 
-    if (list[0]) {
-      return {
-        ticketId: list[0].id,
-      };
-    } else {
-      return {
-        message: 'The flight is sold out!',
-      };
+      const id = list[0]?.id;
+      if (!id) {
+        return {
+          message: 'The flight is sold out!',
+        };
+      }
+
+      try {
+        // try book ticket
+        await retry(5, () => this.appService.bookTicket());
+
+        return {
+          ticketId: id,
+        };
+      } catch(e) {
+        // rollback: set ticket to free
+        await this.prisma.ticket.update({
+          where: { id },
+          data: { orderState: OrderState.FREE }
+        })
+        return { message: e.message };
+      }
+
+    } catch (e) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: e.message };
+    }
+  }
+}
+
+async function retry<T>(time: number, f: () => Promise<T>): Promise<T> {
+  if (time === 1) {
+    return f();
+  } else {
+    try {
+      const res = await f();
+      return res;
+    } catch(_) {
+      return retry(time - 1, f);
     }
   }
 }

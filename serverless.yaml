@@ -1,8 +1,9 @@
 service:
  name: ticketing
-
+package:
+  individually: true
 plugins:
- - serverless-plugin-typescript
+ - serverless-webpack
  - serverless-plugin-optimize
  - serverless-offline
 
@@ -13,8 +14,14 @@ provider:
 
 functions:
  main: # The name of the lambda function
-   handler: dist/lambda.handler
+   handler: src/lambda.handler
    events:
      - http:
          method: any
          path: /{any+}
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    packager: 'npm'
+    includeModules: true

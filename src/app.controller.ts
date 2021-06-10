@@ -38,7 +38,7 @@ type PayedTicket = {
 type TicketType = FreeTicket | LockedTicket | PayingTicket | PayedTicket;
 
 @Controller()
-export class AppController {
+class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly prisma: PrismaService,
@@ -86,3 +86,5 @@ export class AppController {
     }
   }
 }
+
+export { AppController };

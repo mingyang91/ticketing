@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { range } from 'ramda';
 
 @Controller()
-export class BenchmarkController {
+class BenchmarkController {
   constructor(private readonly prisma: PrismaService) {}
 
   static serial(n: number, length: number) {
@@ -137,3 +137,5 @@ export class BenchmarkController {
     return res.count;
   }
 }
+
+export { BenchmarkController };

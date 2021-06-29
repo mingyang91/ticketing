@@ -38,6 +38,7 @@ model Ticket {
   travelerId String?
   price      Int
   orderState OrderState @default(FREE)
+  updateTime DateTime   @default(now())
 
   @@index([orderState], name: "orderState")
   @@index([flightId], name: "flightId")
@@ -54,6 +55,7 @@ model Flight {
 
 enum OrderState {
   FREE
+  ORDER_CANCELLING
   LOCKED_WAIT_CONFIRM
   PAYING
   PAYED

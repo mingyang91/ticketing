@@ -20,7 +20,7 @@ class BenchmarkController {
 
   @Get('/private/api/benchmark/reset')
   async reset(): Promise<number> {
-    return await this.clearAll() + await this.generateAll();
+    return (await this.clearAll()) + (await this.generateAll());
   }
 
   async generateAll(): Promise<number> {
@@ -103,10 +103,10 @@ class BenchmarkController {
         return {
           id: 'ticket#' + flight.id + sn,
           flightId: flight.id,
-          price: flight.basePrice + Math.random() * 1000 | 0,
-          orderState: OrderState.FREE
-        }
-      })
+          price: (flight.basePrice + Math.random() * 1000) | 0,
+          orderState: OrderState.FREE,
+        };
+      });
     });
 
     const res = await this.prisma.ticket.createMany({ data: flatten(tickets) });

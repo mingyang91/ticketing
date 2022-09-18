@@ -1,5 +1,6 @@
-import { Airport } from '.prisma/client';
 import { Controller, Get } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { range } from 'ramda';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
 
@@ -15,15 +16,18 @@ class AppController {
     return this.appService.getHello();
   }
 
-  @Get('/api/tickets')
-  async getTicket(): Promise<Airport[]> {
-    return this.prisma.airport.findMany({
-      where: {
-        name: {
-          startsWith: 'haha',
-        },
-      },
+  @Get('/api/fake-data-fill')
+  async fill(): Promise<string> {
+    const products = range(1, 100).map(() => {
+      return {
+        id: randomUUID(),
+        quantity: 500,
+      };
     });
+    await this.prisma.product.createMany({
+      data: products,
+    });
+    return 'ok';
   }
 }
 

@@ -8,49 +8,29 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
-model Airport {
-  id        String     @id
-  name      String
-  route     Route      @relation(fields: [routeId], references: [id])
-  routeId   String
+model Product {
+  id        String     @id @db.Uuid
+  quantity  Int
+  orders    OrderItem[]
 }
 
-model Route {
-  id        String     @id
-  airports  Airport[]
-  flights   Flight[]
+model Order {
+  id         String     @id @default(uuid()) @db.Uuid
+  items      OrderItem[]
+  cardNo     String
+  state      OrderState
 }
 
-
-model Traveler {
-  id        String     @id
-  name      String
-  tickets   Ticket[]
-}
-
-model Ticket {
-  id         String     @id
-  flight     Flight     @relation(fields: [flightId], references: [id])
-  flightId   String
-  traveler   Traveler?  @relation(fields: [travelerId], references: [id])
-  travelerId String?
-  price      Int
-  orderState OrderState @default(FREE)
-  updateTime DateTime   @default(now())
-
-  @@index([orderState], name: "orderState")
-  @@index([flightId], name: "flightId")
-}
-
-model Flight {
-  id        String     @id
-  capacity  Int
-  route     Route      @relation(fields: [routeId], references: [id])
-  routeId   String
-  tickets   Ticket[]
-  basePrice Int
+model OrderItem {
+  order      Order     @relation(fields: [orderId], references: [id])
+  orderId    String    @db.Uuid
+  product    Product   @relation(fields: [productId], references: [id])
+  productId  String    @db.Uuid
+  quantity   Int
+  @@id([orderId, productId])
 }
 
 enum OrderState {

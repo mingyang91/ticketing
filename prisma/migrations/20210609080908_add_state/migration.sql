@@ -1,2 +1,0 @@
--- AlterEnum
-ALTER TYPE "OrderState" ADD VALUE 'LOCKED_WAIT_CONFIRM';
